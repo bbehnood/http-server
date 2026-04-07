@@ -15,9 +15,6 @@
 #define MAX_PENDING_CONNECTIONS 10
 #define BUFFER_SIZE 4096
 
-// Forward declaration for the handler (implemented in http.c)
-void handle_client_connection(int client_socket);
-
 int start_server(int port, volatile sig_atomic_t *stop_flag)
 {
     int server_fd;

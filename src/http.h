@@ -3,6 +3,14 @@
 
 #include <sys/types.h>
 
+// Struct to hold parsed request data
+typedef struct
+{
+    char method[16];
+    char uri[256];
+    char version[32];
+} HttpRequest;
+
 /**
  * @brief Handles the full lifecycle of a client connection.
  * Receives an HTTP request, parses it, and sends an http response.
@@ -18,7 +26,7 @@ void handle_client_connection(int client_socket);
  * @param request_data Pointer to the buffer containing the request .
  * @param data_len Length of the data in the buffer.
  */
-void parse_http_request(const char *request_data, ssize_t data_len);
+int parse_http_request(int client_socket, HttpRequest *request);
 
 /**
  * @brief Prepares and sends an HTTP response to the client.
@@ -26,6 +34,6 @@ void parse_http_request(const char *request_data, ssize_t data_len);
  *
  * @param client_socket The file descriptor for the client socket.
  */
-void send_http_response(int client_socket);
+int send_http_response(int client_socket, const HttpRequest *request);
 
 #endif // !HTTP_H
