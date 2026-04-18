@@ -12,6 +12,11 @@ add_executable(http_server
 	src/utils.c
 )
 
-add_compile_definitions(DEBUG_MODE)
+if (DEBUG_MODE STREQUAL "ON" OR DEBUG_MODE STREQUAL "TRUE")
+    message(STATUS "Debug mode enabled.")
+    add_compile_definitions(DEBUG_MODE)
+else()
+    message(STATUS "Debug mode disabled. Release mode enabled.")
+endif()
 
 target_compile_options(http_server PRIVATE -Wall -Wextra -Wpedantic)
