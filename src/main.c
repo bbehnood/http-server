@@ -12,8 +12,22 @@ void int_handler(int sig) { stop = 1; }
 
 int main(int argc, char *argv[])
 {
-    // Handle Ctrl+C for shutdown
-    signal(SIGINT, int_handler);
+    /*
+     * These lines are necessary to ensure SA_RESTART isn't enabled
+     * Which is enabled by default on linux
+     * If it is enabled, it won't allow shutdown while blocked in accept()
+     * And we don't want to wait for a request after pressing Ctrl+C
+     */
+    struct sigaction sa;
+    sa.sa_handler = int_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+
+    if (sigaction(SIGINT, &sa, NULL) == -1)
+    {
+        log_perror("sigaction failed");
+        return EXIT_FAILURE;
+    }
 
     // Default port
     int port = DEFAULT_PORT;
