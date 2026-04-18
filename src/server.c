@@ -5,6 +5,7 @@
 #include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,12 +16,29 @@
 #define MAX_PENDING_CONNECTIONS 10
 #define BUFFER_SIZE 4096
 
+// Function to be executed by each thread
+static void *handle_client_thread(void *socket_desc)
+{
+    // Get the socket descriptor
+    int client_socket = *(int *)socket_desc;
+
+    // Call the connection handler function
+    handle_client_connection(client_socket);
+
+    // Free the memory allocated for the socket descriptor
+    // This is allocated in the main loop
+    free(socket_desc);
+
+    pthread_exit(NULL);
+}
+
 int start_server(int port, volatile sig_atomic_t *stop_flag)
 {
     int server_fd;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
+    pthread_t thread_id;
 
     // Create socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -96,13 +114,27 @@ int start_server(int port, volatile sig_atomic_t *stop_flag)
         log_info("Connection accepted from %s:%d", client_ip,
                  ntohs(client_addr.sin_port));
 
-        // Handle the client connection
-        handle_client_connection(client_socket);
+        // Allocate memory for the socket descriptor to pass to the thread
+        int *new_sock = malloc(sizeof(int));
+        if (!new_sock)
+        {
+            log_perror("Failed to allocate memory for socket descriptor");
+            close(client_socket);
+            continue;
+        }
+        *new_sock = client_socket;
 
-        // Close the client client socket
-        close(client_socket);
-        log_info("Connection from %s:%d closed.", client_ip,
-                 ntohs(client_addr.sin_port));
+        // Create a new thread to handle the client connection
+        if (pthread_create(&thread_id, NULL, handle_client_thread, new_sock) <
+            0)
+        {
+            log_perror("Could not create thread");
+            free(new_sock);
+            close(client_socket);
+            continue;
+        }
+
+        pthread_detach(thread_id);
     }
 
     // Close the server socket
