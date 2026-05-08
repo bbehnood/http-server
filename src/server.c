@@ -7,9 +7,7 @@
 #include <netinet/in.h>
 #include <pthread.h>
 #include <signal.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -37,7 +35,6 @@ int start_server(int port, volatile sig_atomic_t *stop_flag)
     int server_fd;
     struct sockaddr_in address;
     int opt = 1;
-    int addrlen = sizeof(address);
     pthread_t thread_id;
 
     // Create socket file descriptor
