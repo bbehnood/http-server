@@ -27,4 +27,4 @@ This server handles multiple client connections concurrently and serves HTTP res
 mkdir build && cd build
 cmake .. -DCMAKE_C_COMPILER=clang -DDEBUG_MODE=ON # Change the flags as needed
 make
-./build/http_server
+./http_server
